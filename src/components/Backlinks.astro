@@ -1,0 +1,137 @@
+---
+import { buildGraph, getBacklinks } from "../utils/graph";
+
+const base = import.meta.env.BASE_URL;
+
+const allPosts = Object.values(
+    import.meta.glob("../pages/posts/*.md", { eager: true }),
+);
+
+const { nodes, links } = buildGraph(allPosts);
+const { frontmatter } = Astro.props;
+
+const currentTitle = frontmatter.title || '';
+const backlinks = getBacklinks({ nodes, links }, currentTitle);
+
+// Outgoing links
+const currentNode = nodes.find((n) => n.id === currentTitle);
+const outgoing = currentNode
+    ? currentNode.links
+        .map((target: string) => nodes.find((n) => n.id === target))
+        .filter(Boolean)
+    : [];
+---
+
+<div class="mt-12 pt-8 border-t light:border-gray-200 dark:border-[#1e2d50]">
+    <div class="max-w-3xl mx-auto space-y-6">
+        <!-- Outgoing links -->
+        {outgoing.length > 0 && (
+            <div>
+                <h3 class="text-xs font-semibold uppercase tracking-wider mb-3 light:text-[#8b909c] dark:text-[#6b7394]">
+                    正向链接 &rarr;
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    {outgoing.map((target: any) => (
+                        <a href={target.url} class="backlink-chip">
+                            <span class="terminal-dot"></span>
+                            {target.title}
+                        </a>
+                    ))}
+                </div>
+            </div>
+        )}
+
+        <!-- Backlinks -->
+        <div class="relative sci-card rounded-xl p-5 border
+            light:bg-white light:border-gray-200
+            dark:bg-[#0b1425] dark:border-[#1e2d50]">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="terminal-dot active node-pulse"></span>
+                <h3 class="text-xs font-semibold uppercase tracking-wider neon-cyan
+                    light:text-[#0891b2] dark:text-[#06b6d4]">
+                    反向链接 &larr;
+                </h3>
+                <span class="text-xs light:text-[#8b909c] dark:text-[#1e2d50]">
+                    {backlinks.length}
+                </span>
+            </div>
+
+            {backlinks.length > 0 ? (
+                <ul class="space-y-1">
+                    {backlinks.map((bl: any) => (
+                        <li>
+                            <a href={bl.url}
+                                class="flex items-center gap-3 py-2 px-3 -mx-3 rounded-lg text-sm transition-all
+                                    light:text-[#5a5f6b] light:hover:bg-gray-50 light:hover:text-[#0891b2]
+                                    dark:text-[#a0a9ba] dark:hover:bg-white/5 dark:hover:text-[#06b6d4]">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                <span>{bl.title}</span>
+                                {bl.tags && bl.tags.length > 0 && (
+                                    <span class="ml-auto text-xs font-mono light:text-[#8b909c] dark:text-[#6b7394]">
+                                        {bl.tags[0]}
+                                    </span>
+                                )}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p class="text-xs light:text-[#8b909c] dark:text-[#6b7394] italic">
+                    暂无节点链接到此处
+                </p>
+            )}
+        </div>
+
+        <!-- Link count badge -->
+        <div class="flex gap-3 text-xs font-mono">
+            <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border
+                light:bg-cyan-50 light:text-cyan-700 light:border-cyan-200
+                dark:bg-cyan-900/15 dark:text-cyan-400 dark:border-cyan-800/30">
+                <span class="terminal-dot"></span>
+                出链 {outgoing.length}
+            </span>
+            <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border
+                light:bg-pink-50 light:text-pink-700 light:border-pink-200
+                dark:bg-pink-900/15 dark:text-pink-400 dark:border-pink-800/30">
+                <span class="terminal-dot active"></span>
+                入链 {backlinks.length}
+            </span>
+        </div>
+    </div>
+</div>
+
+<style>
+  .backlink-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid;
+    transition: all 0.2s ease;
+  }
+  html.light .backlink-chip {
+    background: #ecfeff;
+    color: #0891b2;
+    border-color: #a5f3fc;
+  }
+  html.light .backlink-chip:hover {
+    background: #cffafe;
+    box-shadow: 0 0 15px rgba(6,182,212,0.2);
+  }
+  html.dark .backlink-chip {
+    background: rgba(6,182,212,0.08);
+    color: #22d3ee;
+    border-color: rgba(6,182,212,0.25);
+  }
+  html.dark .backlink-chip:hover {
+    background: rgba(6,182,212,0.15);
+    box-shadow: 0 0 20px rgba(6,182,212,0.2);
+  }
+</style>

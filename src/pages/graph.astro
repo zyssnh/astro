@@ -1,0 +1,374 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import "../styles/sci-fi.css";
+import { buildGraph } from "../utils/graph";
+
+const base = import.meta.env.BASE_URL;
+
+const allPosts = Object.values(
+    import.meta.glob("./posts/*.md", { eager: true }),
+);
+const { nodes, links } = buildGraph(allPosts);
+---
+
+<BaseLayout pageTitle="双链图谱">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold cursor light:text-[#1a1d23] dark:text-[#e4e8f1]">
+                    双链<span class="neon-cyan">图谱</span>
+                </h1>
+                <p class="text-sm mt-1 light:text-[#8b909c] dark:text-[#6b7394]">
+                    {nodes.length} 节点 · {links.length} 连接 · 网状拓扑
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <span class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-lg border
+                    light:bg-cyan-50 light:text-cyan-700 light:border-cyan-200
+                    dark:bg-cyan-900/15 dark:text-cyan-400 dark:border-cyan-800/30">
+                    <span class="terminal-dot"></span> 正向
+                </span>
+                <span class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-lg border
+                    light:bg-pink-50 light:text-pink-700 light:border-pink-200
+                    dark:bg-pink-900/15 dark:text-pink-400 dark:border-pink-800/30">
+                    <span class="terminal-dot active"></span> 反向
+                </span>
+            </div>
+        </div>
+
+        <!-- Canvas -->
+        <div class="relative scanlines sci-grid rounded-xl overflow-hidden border
+            light:bg-white light:border-gray-200
+            dark:bg-[#0b1121] dark:border-[#1e2d50]"
+            style="height: 500px;">
+            <canvas id="graph-canvas" class="w-full h-full"></canvas>
+            <div class="absolute top-3 left-3 text-xs font-mono light:text-[#8b909c] dark:text-[#1e2d50] z-10">
+                NETWORK://GRAPH.SYS
+            </div>
+            <div class="absolute bottom-3 right-3 text-xs font-mono light:text-[#8b909c] dark:text-[#1e2d50] z-10 cursor">
+                <span id="hover-label"></span>
+            </div>
+        </div>
+
+        <!-- Node list -->
+        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {nodes.map((node) => {
+                const outgoingCount = node.links.length;
+                const incomingCount = links.filter((l) => l.target === node.id).length;
+                return (
+                    <a href={node.url}
+                        class="sci-card node-glow glitch group rounded-xl p-5 border no-underline
+                            light:bg-white light:border-gray-200 light:hover:border-cyan-300
+                            dark:bg-[#0b1425] dark:border-[#1e2d50] dark:hover:border-cyan-800">
+                        <div class="flex items-start justify-between mb-3">
+                            <h3 class="font-semibold text-sm group-hover:neon-cyan transition-all
+                                light:text-[#1a1d23] dark:text-[#e4e8f1]">
+                                {node.title}
+                            </h3>
+                            <span class="flex gap-1 text-xs font-mono">
+                                <span class="px-1.5 py-0.5 rounded light:bg-cyan-50 light:text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-400">
+                                    {outgoingCount} &uarr;
+                                </span>
+                                {incomingCount > 0 && (
+                                    <span class="px-1.5 py-0.5 rounded light:bg-pink-50 light:text-pink-600 dark:bg-pink-900/20 dark:text-pink-400">
+                                        {incomingCount} &darr;
+                                    </span>
+                                )}
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mb-2">
+                            {node.tags.map((tag: string) => (
+                                <span class="px-1.5 py-0.5 rounded text-xs
+                                    light:bg-gray-100 light:text-[#8b909c]
+                                    dark:bg-white/5 dark:text-[#6b7394]">
+                                    #{tag}
+                                </span>
+                            ))}
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs light:text-[#8b909c] dark:text-[#6b7394]">
+                            <span class="terminal-dot node-pulse"></span>
+                            出链: {node.links.slice(0, 3).join(", ")}{node.links.length > 3 ? "..." : ""}
+                        </div>
+                    </a>
+                );
+            })}
+        </div>
+
+        <!-- Stats -->
+        <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div class="data-stream rounded-xl p-4 border
+                light:bg-white light:border-gray-200 dark:bg-[#0b1425] dark:border-[#1e2d50]">
+                <div class="text-2xl font-bold neon-cyan">{nodes.length}</div>
+                <div class="text-xs mt-1 light:text-[#8b909c] dark:text-[#6b7394]">节点</div>
+            </div>
+            <div class="data-stream rounded-xl p-4 border
+                light:bg-white light:border-gray-200 dark:bg-[#0b1425] dark:border-[#1e2d50]">
+                <div class="text-2xl font-bold neon-magenta">{links.length}</div>
+                <div class="text-xs mt-1 light:text-[#8b909c] dark:text-[#6b7394]">连接</div>
+            </div>
+            <div class="data-stream rounded-xl p-4 border
+                light:bg-white light:border-gray-200 dark:bg-[#0b1425] dark:border-[#1e2d50]">
+                <div class="text-2xl font-bold neon-green">{nodes.reduce((s: number, n: any) => s + n.links.length, 0)}</div>
+                <div class="text-xs mt-1 light:text-[#8b909c] dark:text-[#6b7394]">出链</div>
+            </div>
+            <div class="data-stream rounded-xl p-4 border
+                light:bg-white light:border-gray-200 dark:bg-[#0b1425] dark:border-[#1e2d50]">
+                <div class="text-2xl font-bold neon-cyan">{((links.length / Math.max(nodes.length, 1))).toFixed(2)}</div>
+                <div class="text-xs mt-1 light:text-[#8b909c] dark:text-[#6b7394]">平均度</div>
+            </div>
+        </div>
+    </div>
+</BaseLayout>
+
+<script type="application/json" id="graph-data">
+{JSON.stringify({ nodes, links })}
+</script>
+
+<script>
+  (function() {
+    const canvas = document.getElementById('graph-canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const container = canvas.parentElement;
+    const label = document.getElementById('hover-label');
+
+    // Parse graph data from server
+    const rawData = document.getElementById('graph-data');
+    if (!rawData || !rawData.textContent) return;
+    const data = JSON.parse(rawData.textContent.trim());
+    const graphNodes = data.nodes;
+    const graphLinks = data.links;
+
+    // State
+    let nodePositions = [];
+    let hoveredIndex = -1;
+    let animationId = 0;
+    let time = 0;
+
+    function getColors() {
+      const isDark = document.documentElement.classList.contains('dark');
+      return {
+        bg: isDark ? '#0b1121' : '#fafbfc',
+        node: isDark ? '#06b6d4' : '#0891b2',
+        nodeHover: isDark ? '#22d3ee' : '#06b6d4',
+        edge: isDark ? 'rgba(6,182,212,0.2)' : 'rgba(8,145,178,0.12)',
+        edgeHover: isDark ? 'rgba(6,182,212,0.6)' : 'rgba(8,145,178,0.5)',
+        glow: isDark ? 'rgba(6,182,212,0.15)' : 'rgba(8,145,178,0.1)',
+        text: isDark ? '#a0a9ba' : '#8b909c',
+      };
+    }
+
+    let colors = getColors();
+
+    function resize() {
+      var rect = container.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    function initPositions() {
+      var w = canvas.width / window.devicePixelRatio;
+      var h = canvas.height / window.devicePixelRatio;
+      var cx = w / 2;
+      var cy = h / 2;
+      var r = Math.min(w, h) * 0.35;
+
+      nodePositions = graphNodes.map(function(_n, i) {
+        var angle = (2 * Math.PI * i) / graphNodes.length - Math.PI / 2;
+        return {
+          x: cx + Math.cos(angle) * r * (0.7 + Math.random() * 0.6),
+          y: cy + Math.sin(angle) * r * (0.7 + Math.random() * 0.6),
+          vx: 0,
+          vy: 0,
+          radius: 18 + Math.random() * 8,
+        };
+      });
+    }
+
+    function draw() {
+      var w = canvas.width / window.devicePixelRatio;
+      var h = canvas.height / window.devicePixelRatio;
+      ctx.clearRect(0, 0, w, h);
+
+      var simStep = 0.3;
+      var centerX = w / 2;
+      var centerY = h / 2;
+      var repulsion = 800;
+      var springLen = 120;
+      var springK = 0.02;
+      var damping = 0.85;
+
+      // Repulsion
+      for (var i = 0; i < nodePositions.length; i++) {
+        for (var j = i + 1; j < nodePositions.length; j++) {
+          var a = nodePositions[i];
+          var b = nodePositions[j];
+          var dx = b.x - a.x;
+          var dy = b.y - a.y;
+          var dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+          var force = repulsion / (dist * dist);
+          var fx = (dx / dist) * force;
+          var fy = (dy / dist) * force;
+          a.vx -= fx * simStep;
+          a.vy -= fy * simStep;
+          b.vx += fx * simStep;
+          b.vy += fy * simStep;
+        }
+      }
+
+      // Springs
+      graphLinks.forEach(function(link) {
+        var si = -1, ti = -1;
+        for (var k = 0; k < graphNodes.length; k++) {
+          if (graphNodes[k].id === link.source) si = k;
+          if (graphNodes[k].id === link.target) ti = k;
+        }
+        if (si === -1 || ti === -1) return;
+        var a = nodePositions[si];
+        var b = nodePositions[ti];
+        var dx = b.x - a.x;
+        var dy = b.y - a.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        var displacement = dist - springLen;
+        var force = displacement * springK;
+        var fx = (dx / Math.max(dist, 1)) * force;
+        var fy = (dy / Math.max(dist, 1)) * force;
+        a.vx += fx * simStep;
+        a.vy += fy * simStep;
+        b.vx -= fx * simStep;
+        b.vy -= fy * simStep;
+      });
+
+      // Center gravity + damp
+      nodePositions.forEach(function(p) {
+        p.vx += (centerX - p.x) * 0.001;
+        p.vy += (centerY - p.y) * 0.001;
+        p.vx *= damping;
+        p.vy *= damping;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.x = Math.max(p.radius, Math.min(w - p.radius, p.x));
+        p.y = Math.max(p.radius, Math.min(h - p.radius, p.y));
+      });
+
+      // Draw edges
+      graphLinks.forEach(function(link) {
+        var si = -1, ti = -1;
+        for (var k = 0; k < graphNodes.length; k++) {
+          if (graphNodes[k].id === link.source) si = k;
+          if (graphNodes[k].id === link.target) ti = k;
+        }
+        if (si === -1 || ti === -1) return;
+        var a = nodePositions[si];
+        var b = nodePositions[ti];
+        var isHovered = hoveredIndex === si || hoveredIndex === ti;
+
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = isHovered ? colors.edgeHover : colors.edge;
+        ctx.lineWidth = isHovered ? 2 : 0.8;
+        if (isHovered) {
+          ctx.shadowColor = colors.glow;
+          ctx.shadowBlur = 10;
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      });
+
+      // Draw nodes
+      nodePositions.forEach(function(p, i) {
+        var node = graphNodes[i];
+        var isHovered = hoveredIndex === i;
+
+        if (isHovered) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius + 12, 0, Math.PI * 2);
+          ctx.fillStyle = colors.glow;
+          ctx.fill();
+        }
+
+        ctx.beginPath();
+        var pulse = 1 + Math.sin(time * 0.05 + i) * 0.06;
+        var r = p.radius * (isHovered ? 1.2 : pulse);
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = isHovered ? colors.nodeHover : colors.node;
+        ctx.shadowColor = colors.glow;
+        ctx.shadowBlur = isHovered ? 20 : 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = colors.text;
+        ctx.font = (isHovered ? 'bold ' : '') + '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(node.title || node.id, p.x, p.y + p.radius + 16);
+      });
+
+      time++;
+    }
+
+    function animate() {
+      draw();
+      animationId = requestAnimationFrame(animate);
+    }
+
+    canvas.addEventListener('mousemove', function(e) {
+      var rect = canvas.getBoundingClientRect();
+      var mx = e.clientX - rect.left;
+      var my = e.clientY - rect.top;
+      var found = -1;
+
+      for (var i = nodePositions.length - 1; i >= 0; i--) {
+        var p = nodePositions[i];
+        var dx = mx - p.x;
+        var dy = my - p.y;
+        if (dx * dx + dy * dy < (p.radius + 6) * (p.radius + 6)) {
+          found = i;
+          break;
+        }
+      }
+
+      hoveredIndex = found;
+      if (label) {
+        if (found >= 0) {
+          var n = graphNodes[found];
+          var inCount = 0;
+          graphLinks.forEach(function(l) { if (l.target === n.id) inCount++; });
+          var outCount = n.links ? n.links.length : 0;
+          label.textContent = n.title + ' [' + outCount + '↑ ' + inCount + '↓]';
+          label.className = 'neon-cyan';
+        } else {
+          label.textContent = '';
+          label.className = '';
+        }
+      }
+    });
+
+    canvas.addEventListener('click', function() {
+      if (hoveredIndex >= 0 && graphNodes[hoveredIndex]) {
+        window.location.href = graphNodes[hoveredIndex].url;
+      }
+    });
+
+    resize();
+    initPositions();
+    animate();
+
+    window.addEventListener('resize', function() {
+      resize();
+      initPositions();
+    });
+
+    var observer = new MutationObserver(function() {
+      colors = getColors();
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  })();
+</script>

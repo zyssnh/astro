@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
 import ArticleHeader from "../components/ArticleHeader.astro";
+import Backlinks from "../components/Backlinks.astro";
 
 const { frontmatter } = Astro.props;
 ---
@@ -29,6 +30,9 @@ const { frontmatter } = Astro.props;
             </nav>
         </aside>
     </div>
+
+    <!-- Backlinks -->
+    <Backlinks frontmatter={frontmatter} />
 </BaseLayout>
 
 <style>
