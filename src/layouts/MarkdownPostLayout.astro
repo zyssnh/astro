@@ -16,8 +16,8 @@ const { frontmatter } = Astro.props;
     />
 
     <div class="flex gap-8 lg:gap-12">
-        <!-- Main content -->
-        <article class="prose light:prose-slate dark:prose-invert max-w-none flex-1 min-w-0">
+        <!-- Main content: constrained width for readability -->
+        <article class="prose light:prose-slate dark:prose-invert max-w-3xl mx-auto flex-1 min-w-0">
             <slot />
         </article>
 
