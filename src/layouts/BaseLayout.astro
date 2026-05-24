@@ -4,35 +4,31 @@ import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 
 const { pageTitle } = Astro.props;
+const base = import.meta.env.BASE_URL;
 ---
 
 <html lang="zh-CN" class="light">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width" />
-        <meta name="generator" content={Astro.generator} />
-        <link rel="icon" href="/favicon.svg" />
-        <title>{pageTitle}</title>
-    </head>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" href={`${base}/favicon.svg`} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <title>{pageTitle} | zyssnh</title>
+  </head>
 
-    <body
-        class="min-h-screen text-slate-900 dark:text-amber-50 light:bg-white light:text-black"
-    >
-        <Header />
+  <body class="min-h-screen antialiased">
+    <Header />
 
-        <main class="max-w-7xl mx-auto px-4 py-6">
-            <slot />
-        </main>
+    <main class="max-w-7xl mx-auto px-4 py-8 sm:py-12">
+      <slot />
+    </main>
 
-        <Footer />
+    <Footer />
 
-        <!-- 加载菜单脚本 -->
-        <script src="../scripts/menu.js"></script>
-
-        <!-- 加载主题管理脚本 -->
-        <script src="../scripts/theme.js"></script>
-
-        <!-- 代码块复制功能 -->
-        <script src="../scripts/copyCode.js"></script>
-    </body>
+    <script src="../scripts/menu.js"></script>
+    <script src="../scripts/theme.js"></script>
+    <script src="../scripts/copyCode.js"></script>
+  </body>
 </html>

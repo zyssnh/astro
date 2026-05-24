@@ -14,6 +14,7 @@ import tailwindcss from '@tailwindcss/vite';
 // https://astro.build/config
 export default defineConfig({
     site: 'https://zyssnh.github.io',
+    base: '/astro',
 
     // 为 WSL 环境下的文件更改检测提供支持
     vite: {

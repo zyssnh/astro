@@ -4,26 +4,23 @@ import ThemeIcon from "./ThemeIcon.astro";
 import Navigation from "./Navigation.astro";
 ---
 
-<!-- 页面导航栏：粘性定位，包含菜单、导航链接和主题切换 -->
-<header class="sticky top-0 z-50 light:bg-white light:border-b light:border-gray-200 light:shadow-md dark:bg-gradient-to-r dark:from-blue-900 dark:via-purple-900 dark:to-purple-800 dark:border-b dark:border-purple-700 dark:shadow-lg">
-    <nav class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        <!-- 菜单按钮（仅在移动端显示） -->
-        <div class="lg:hidden">
-            <Menu />
-        </div>
+<header class="sticky top-0 z-50 backdrop-blur-md
+  light:bg-white/90 light:border-b light:border-gray-200/60 light:shadow-sm
+  dark:bg-blue-950/80 dark:border-b dark:border-purple-800/40 dark:shadow-lg">
+  <nav class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+    <!-- 移动端菜单按钮 -->
+    <div class="lg:hidden">
+      <Menu />
+    </div>
 
-        <!-- 导航链接（仅在桌面端显示） -->
-        <div class="hidden lg:flex flex-1 justify-center">
-            <Navigation />
-        </div>
+    <!-- 桌面端导航 -->
+    <div class="hidden lg:flex flex-1 justify-center">
+      <Navigation />
+    </div>
 
-        <!-- 主题切换按钮（右侧） -->
-        <div class="ml-auto">
-            <ThemeIcon />
-        </div>
-    </nav>
+    <!-- 主题切换 -->
+    <div class="ml-auto">
+      <ThemeIcon />
+    </div>
+  </nav>
 </header>
-
-<style>
-    /* 导航栏样式由 Tailwind CSS 类处理 */
-</style>

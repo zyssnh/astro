@@ -1,10 +1,21 @@
 ---
-import Social from "./Social.astro";
+const base = import.meta.env.BASE_URL;
 ---
 
-<footer class="flex justify-center gap-4 mt-8">
-  <Social platform="github" username="zyssnh" />
-  <Social platform="github" username="withastro" />
-  <Social platform="twitter" username="astrodotbuild" />
-  <Social platform="youtube" username="astrodotbuild" />
+<footer class="border-t mt-16 py-8
+    light:border-gray-200 light:text-gray-500
+    dark:border-purple-800/50 dark:text-amber-100/60">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-sm">
+            &copy; {new Date().getFullYear()} zyssnh &mdash; Built with Astro
+        </p>
+
+        <nav class="flex gap-6 text-sm">
+            <a href={`${base}/`} class="hover:underline light:text-gray-500 light:hover:text-indigo-600 dark:text-purple-300 dark:hover:text-yellow-400 transition-colors">首页</a>
+            <a href={`${base}/about/`} class="hover:underline light:text-gray-500 light:hover:text-indigo-600 dark:text-purple-300 dark:hover:text-yellow-400 transition-colors">关于</a>
+            <a href={`${base}/blog/`} class="hover:underline light:text-gray-500 light:hover:text-indigo-600 dark:text-purple-300 dark:hover:text-yellow-400 transition-colors">博客</a>
+            <a href={`${base}/collect/`} class="hover:underline light:text-gray-500 light:hover:text-indigo-600 dark:text-purple-300 dark:hover:text-yellow-400 transition-colors">收藏</a>
+            <a href={`${base}/tags/`} class="hover:underline light:text-gray-500 light:hover:text-indigo-600 dark:text-purple-300 dark:hover:text-yellow-400 transition-colors">标签</a>
+        </nav>
+    </div>
 </footer>

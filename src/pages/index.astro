@@ -1,20 +1,138 @@
 ---
-import Welcome from "../components/Welcome.astro";
-import Layout from "../layouts/Layout.astro";
-
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Greeting from "../components/Greeting";
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+
+const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout pageTitle="首页">
-	<Greeting client:load messages={["学习 Astro 很有趣！", "Astro is awesome!", "Astro 很棒！"]} />
+  <!-- 英雄区域 -->
+  <section class="relative overflow-hidden rounded-2xl mb-16 py-20 px-6 text-center
+    light:bg-gradient-to-br light:from-slate-50 light:via-white light:to-blue-50 light:border light:border-slate-200
+    dark:bg-gradient-to-br dark:from-blue-950 dark:via-purple-950 dark:to-indigo-950 dark:border dark:border-purple-800/50">
+
+    <!-- 背景装饰 -->
+    <div class="absolute inset-0 opacity-30 pointer-events-none">
+      <div class="absolute top-10 left-10 w-72 h-72 rounded-full blur-3xl
+        light:bg-blue-200 dark:bg-purple-600"></div>
+      <div class="absolute bottom-10 right-10 w-96 h-96 rounded-full blur-3xl
+        light:bg-indigo-200 dark:bg-blue-700"></div>
+    </div>
+
+    <div class="relative z-10 max-w-3xl mx-auto">
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight
+        light:text-slate-900 dark:text-amber-50">
+        🚀 探索<span class="light:text-indigo-600 dark:text-yellow-400"> Astro</span> 的世界
+      </h1>
+      <p class="text-lg sm:text-xl mb-8 max-w-2xl mx-auto leading-relaxed
+        light:text-slate-600 dark:text-amber-100/80">
+        一个基于 Astro 构建的现代静态博客，支持 Markdown、数学公式、代码高亮，
+        以及优雅的浅色/深色主题切换。
+      </p>
+
+      <div class="flex flex-wrap gap-4 justify-center">
+        <a href={`${base}/blog/`}
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300
+            light:bg-indigo-600 light:text-white light:hover:bg-indigo-700 light:shadow-lg light:shadow-indigo-500/25 light:hover:shadow-indigo-500/40
+            dark:bg-yellow-500 dark:text-slate-900 dark:hover:bg-yellow-400 dark:shadow-lg dark:shadow-yellow-500/25">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          阅读博客
+        </a>
+        <a href={`${base}/about/`}
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300
+            light:bg-white light:text-slate-700 light:hover:bg-slate-100 light:border light:border-slate-300
+            dark:bg-white/10 dark:text-amber-50 dark:hover:bg-white/20 dark:border dark:border-amber-50/30">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+          了解更多
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 问候组件 -->
+  <div class="mb-16 text-center">
+    <Greeting client:load messages={[
+      "学习 Astro 很有趣",
+      "Astro is awesome!",
+      "Astro 很棒",
+      "欢迎来到我的博客",
+      "享受阅读的乐趣"
+    ]} />
+  </div>
+
+  <!-- 功能卡片 -->
+  <section class="mb-16">
+    <h2 class="text-2xl sm:text-3xl font-bold mb-8 text-center
+      light:text-slate-900 dark:text-amber-50">
+      站点导览
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- 博客卡片 -->
+      <a href={`${base}/blog/`} class="group block rounded-xl p-6 transition-all duration-300
+        light:bg-white light:border light:border-slate-200 light:hover:shadow-xl light:hover:border-indigo-300 light:hover:-translate-y-1
+        dark:bg-white/5 dark:border dark:border-purple-700/50 dark:hover:bg-white/10 dark:hover:border-purple-500 dark:hover:-translate-y-1">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4
+          light:bg-indigo-100 light:text-indigo-600
+          dark:bg-purple-800/50 dark:text-yellow-400">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2 light:text-slate-900 dark:text-amber-50 group-hover:light:text-indigo-600 group-hover:dark:text-yellow-400 transition-colors">博客</h3>
+        <p class="text-sm leading-relaxed light:text-slate-500 dark:text-amber-100/60">Markdown 文章，支持数学公式、代码高亮、表格和目录导航。</p>
+      </a>
+
+      <!-- 收藏卡片 -->
+      <a href={`${base}/collect/`} class="group block rounded-xl p-6 transition-all duration-300
+        light:bg-white light:border light:border-slate-200 light:hover:shadow-xl light:hover:border-indigo-300 light:hover:-translate-y-1
+        dark:bg-white/5 dark:border dark:border-purple-700/50 dark:hover:bg-white/10 dark:hover:border-purple-500 dark:hover:-translate-y-1">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4
+          light:bg-amber-100 light:text-amber-600
+          dark:bg-amber-800/50 dark:text-amber-400">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2 light:text-slate-900 dark:text-amber-50 group-hover:light:text-amber-600 group-hover:dark:text-amber-400 transition-colors">收藏</h3>
+        <p class="text-sm leading-relaxed light:text-slate-500 dark:text-amber-100/60">收集整理有用的资源、工具和链接。</p>
+      </a>
+
+      <!-- 标签卡片 -->
+      <a href={`${base}/tags/`} class="group block rounded-xl p-6 transition-all duration-300
+        light:bg-white light:border light:border-slate-200 light:hover:shadow-xl light:hover:border-indigo-300 light:hover:-translate-y-1
+        dark:bg-white/5 dark:border dark:border-purple-700/50 dark:hover:bg-white/10 dark:hover:border-purple-500 dark:hover:-translate-y-1">
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4
+          light:bg-emerald-100 light:text-emerald-600
+          dark:bg-emerald-800/50 dark:text-emerald-400">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+        </div>
+        <h3 class="text-lg font-semibold mb-2 light:text-slate-900 dark:text-amber-50 group-hover:light:text-emerald-600 group-hover:dark:text-emerald-400 transition-colors">标签</h3>
+        <p class="text-sm leading-relaxed light:text-slate-500 dark:text-amber-100/60">按标签分类浏览文章，快速找到感兴趣的内容。</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- 技术栈展示 -->
+  <section class="mb-16">
+    <h2 class="text-2xl sm:text-3xl font-bold mb-8 text-center
+      light:text-slate-900 dark:text-amber-50">
+      技术栈
+    </h2>
+    <div class="flex flex-wrap gap-4 justify-center">
+      <span class="px-5 py-2.5 rounded-full text-sm font-medium transition-all
+        light:bg-slate-100 light:text-slate-700 light:border light:border-slate-200
+        dark:bg-white/5 dark:text-amber-100 dark:border dark:border-purple-700/50">⚡ Astro 5</span>
+      <span class="px-5 py-2.5 rounded-full text-sm font-medium transition-all
+        light:bg-slate-100 light:text-slate-700 light:border light:border-slate-200
+        dark:bg-white/5 dark:text-amber-100 dark:border dark:border-purple-700/50">🎨 Tailwind CSS 4</span>
+      <span class="px-5 py-2.5 rounded-full text-sm font-medium transition-all
+        light:bg-slate-100 light:text-slate-700 light:border light:border-slate-200
+        dark:bg-white/5 dark:text-amber-100 dark:border dark:border-purple-700/50">📝 Markdown</span>
+      <span class="px-5 py-2.5 rounded-full text-sm font-medium transition-all
+        light:bg-slate-100 light:text-slate-700 light:border light:border-slate-200
+        dark:bg-white/5 dark:text-amber-100 dark:border dark:border-purple-700/50">📐 KaTeX</span>
+      <span class="px-5 py-2.5 rounded-full text-sm font-medium transition-all
+        light:bg-slate-100 light:text-slate-700 light:border light:border-slate-200
+        dark:bg-white/5 dark:text-amber-100 dark:border dark:border-purple-700/50">💡 Shiki</span>
+      <span class="px-5 py-2.5 rounded-full text-sm font-medium transition-all
+        light:bg-slate-100 light:text-slate-700 light:border light:border-slate-200
+        dark:bg-white/5 dark:text-amber-100 dark:border dark:border-purple-700/50">🌓 深色模式</span>
+    </div>
+  </section>
 </BaseLayout>
-
-
-<!-- 
-<Layout>
-	<Welcome />
-</Layout>
--->

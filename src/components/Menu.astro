@@ -1,5 +1,5 @@
 ---
-/* 纯展示组件，不写 JS */
+const base = import.meta.env.BASE_URL;
 ---
 
 <div class="relative">
@@ -39,9 +39,12 @@
            dark:bg-slate-900 dark:border-slate-700"
     >
         <ul class="flex flex-col p-4 gap-3 text-sm">
-            <li><a href="/" class="menu-link">首页</a></li>
-            <li><a href="/posts" class="menu-link">文章</a></li>
-            <li><a href="/about" class="menu-link">关于</a></li>
+            <li><a href={`${base}/`} class="menu-link">首页</a></li>
+            <li><a href={`${base}/about/`} class="menu-link">关于</a></li>
+            <li><a href={`${base}/blog/`} class="menu-link">博客</a></li>
+            <li><a href={`${base}/collect/`} class="menu-link">收藏</a></li>
+            <li><a href={`${base}/tags/`} class="menu-link">标签</a></li>
+            <li><a href={`${base}/test/`} class="menu-link">测试</a></li>
         </ul>
     </nav>
 </div>
