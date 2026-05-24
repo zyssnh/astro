@@ -3,372 +3,156 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import "../styles/sci-fi.css";
 import { buildGraph } from "../utils/graph";
 
-const base = import.meta.env.BASE_URL;
-
-const allPosts = Object.values(
-    import.meta.glob("./posts/*.md", { eager: true }),
-);
+const allPosts = Object.values(import.meta.glob("./posts/**/*.md", { eager: true }));
 const { nodes, links } = buildGraph(allPosts);
+
+const cP: Record<string, { desc: string }> = {};
+for (const post of allPosts as any[]) {
+    const u: string = post.url || '';
+    const s = u.split('/').filter(Boolean).pop() || '';
+    cP[s] = { desc: post.frontmatter.description || '' };
+}
+const gData = JSON.stringify({ nodes, links, contentPreview: cP });
 ---
 
-<BaseLayout pageTitle="双链图谱">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-extrabold cursor light:text-[#1a1d23] dark:text-[#e4e8f1]">
-                    双链<span class="neon-cyan">图谱</span>
-                </h1>
-                <p class="text-sm mt-1 light:text-[#8b909c] dark:text-[#6b7394]">
-                    {nodes.length} 节点 · {links.length} 连接 · 网状拓扑
-                </p>
-            </div>
-            <div class="flex gap-2">
-                <span class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-lg border
-                    light:bg-cyan-50 light:text-cyan-700 light:border-cyan-200
-                    dark:bg-cyan-900/15 dark:text-cyan-400 dark:border-cyan-800/30">
-                    <span class="terminal-dot"></span> 正向
-                </span>
-                <span class="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-lg border
-                    light:bg-pink-50 light:text-pink-700 light:border-pink-200
-                    dark:bg-pink-900/15 dark:text-pink-400 dark:border-pink-800/30">
-                    <span class="terminal-dot active"></span> 反向
-                </span>
-            </div>
-        </div>
+<BaseLayout pageTitle="双链">
 
-        <!-- Canvas -->
-        <div class="relative scanlines sci-grid rounded-xl overflow-hidden border
-            light:bg-white light:border-gray-200
-            dark:bg-[#0b1121] dark:border-[#1e2d50]"
-            style="height: 500px;">
-            <canvas id="graph-canvas" class="w-full h-full"></canvas>
-            <div class="absolute top-3 left-3 text-xs font-mono light:text-[#8b909c] dark:text-[#1e2d50] z-10">
-                NETWORK://GRAPH.SYS
-            </div>
-            <div class="absolute bottom-3 right-3 text-xs font-mono light:text-[#8b909c] dark:text-[#1e2d50] z-10 cursor">
-                <span id="hover-label"></span>
-            </div>
-        </div>
+<div id="uni-root" style="position:fixed;inset:0;z-index:0;background:#020617;"></div>
 
-        <!-- Node list -->
-        <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {nodes.map((node) => {
-                const outgoingCount = node.links.length;
-                const incomingCount = links.filter((l) => l.target === node.id).length;
-                return (
-                    <a href={node.url}
-                        class="sci-card node-glow glitch group rounded-xl p-5 border no-underline
-                            light:bg-white light:border-gray-200 light:hover:border-cyan-300
-                            dark:bg-[#0b1425] dark:border-[#1e2d50] dark:hover:border-cyan-800">
-                        <div class="flex items-start justify-between mb-3">
-                            <h3 class="font-semibold text-sm group-hover:neon-cyan transition-all
-                                light:text-[#1a1d23] dark:text-[#e4e8f1]">
-                                {node.title}
-                            </h3>
-                            <span class="flex gap-1 text-xs font-mono">
-                                <span class="px-1.5 py-0.5 rounded light:bg-cyan-50 light:text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-400">
-                                    {outgoingCount} &uarr;
-                                </span>
-                                {incomingCount > 0 && (
-                                    <span class="px-1.5 py-0.5 rounded light:bg-pink-50 light:text-pink-600 dark:bg-pink-900/20 dark:text-pink-400">
-                                        {incomingCount} &darr;
-                                    </span>
-                                )}
-                            </span>
-                        </div>
-                        <div class="flex flex-wrap gap-1 mb-2">
-                            {node.tags.map((tag: string) => (
-                                <span class="px-1.5 py-0.5 rounded text-xs
-                                    light:bg-gray-100 light:text-[#8b909c]
-                                    dark:bg-white/5 dark:text-[#6b7394]">
-                                    #{tag}
-                                </span>
-                            ))}
-                        </div>
-                        <div class="flex items-center gap-1.5 text-xs light:text-[#8b909c] dark:text-[#6b7394]">
-                            <span class="terminal-dot node-pulse"></span>
-                            出链: {node.links.slice(0, 3).join(", ")}{node.links.length > 3 ? "..." : ""}
-                        </div>
-                    </a>
-                );
-            })}
-        </div>
+<div id="star-lbl" style="position:fixed;bottom:5rem;left:50%;transform:translateX(-50%);z-index:10;font:0.85rem monospace;color:#22d3ee;text-shadow:0 0 12px rgba(34,211,238,.5);opacity:0;transition:opacity .3s;pointer-events:none"></div>
 
-        <!-- Stats -->
-        <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-            <div class="data-stream rounded-xl p-4 border
-                light:bg-white light:border-gray-200 dark:bg-[#0b1425] dark:border-[#1e2d50]">
-                <div class="text-2xl font-bold neon-cyan">{nodes.length}</div>
-                <div class="text-xs mt-1 light:text-[#8b909c] dark:text-[#6b7394]">节点</div>
-            </div>
-            <div class="data-stream rounded-xl p-4 border
-                light:bg-white light:border-gray-200 dark:bg-[#0b1425] dark:border-[#1e2d50]">
-                <div class="text-2xl font-bold neon-magenta">{links.length}</div>
-                <div class="text-xs mt-1 light:text-[#8b909c] dark:text-[#6b7394]">连接</div>
-            </div>
-            <div class="data-stream rounded-xl p-4 border
-                light:bg-white light:border-gray-200 dark:bg-[#0b1425] dark:border-[#1e2d50]">
-                <div class="text-2xl font-bold neon-green">{nodes.reduce((s: number, n: any) => s + n.links.length, 0)}</div>
-                <div class="text-xs mt-1 light:text-[#8b909c] dark:text-[#6b7394]">出链</div>
-            </div>
-            <div class="data-stream rounded-xl p-4 border
-                light:bg-white light:border-gray-200 dark:bg-[#0b1425] dark:border-[#1e2d50]">
-                <div class="text-2xl font-bold neon-cyan">{((links.length / Math.max(nodes.length, 1))).toFixed(2)}</div>
-                <div class="text-xs mt-1 light:text-[#8b909c] dark:text-[#6b7394]">平均度</div>
-            </div>
-        </div>
-    </div>
-</BaseLayout>
+<div id="pv-card" style="position:fixed;right:1.5rem;top:5rem;z-index:20;width:280px;max-height:55vh;overflow-y:auto;padding:1.25rem;border-radius:1rem;backdrop-filter:blur(16px);opacity:0;transform:translateX(20px);transition:all .35s;pointer-events:none;border:1px solid">
+  <h3 id="pv-t" style="font-size:1rem;font-weight:700;margin:0 0 .35rem"></h3>
+  <div id="pv-d" style="font-size:.8rem;line-height:1.5;margin-bottom:.6rem"></div>
+  <div id="pv-g" style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.5rem"></div>
+  <div style="display:flex;gap:1rem;font:0.75rem monospace"><span id="pv-o" style="color:#22d3ee"></span><span id="pv-i" style="color:#f472b6"></span></div>
+  <a id="pv-go" href="#" style="display:inline-flex;align-items:center;gap:.3rem;margin-top:.75rem;font-size:.8rem;font-weight:600;text-decoration:none">曲速跃迁 →</a>
+</div>
 
-<script type="application/json" id="graph-data">
-{JSON.stringify({ nodes, links })}
-</script>
+<div id="set-pn" style="position:fixed;left:1.5rem;top:5rem;z-index:20;width:240px;padding:1rem;border-radius:1rem;backdrop-filter:blur(16px);border:1px solid;display:none">
+  <label style="display:block;margin-bottom:.6rem;font-size:.7rem"><span style="text-transform:uppercase;letter-spacing:.05em">亮度</span><input type="range" id="s-bright" min="0.3" max="2" step="0.1" value="1" style="width:100%;accent-color:#22d3ee"></label>
+  <label style="display:block;margin-bottom:.6rem;font-size:.7rem"><span style="text-transform:uppercase;letter-spacing:.05em">密度</span><input type="range" id="s-dense" min="3" max="15" step="0.5" value="8" style="width:100%;accent-color:#22d3ee"></label>
+  <label style="display:block;margin-bottom:.6rem;font-size:.7rem"><span style="text-transform:uppercase;letter-spacing:.05em">转速</span><input type="range" id="s-spin" min="0" max="3" step="0.1" value="0.3" style="width:100%;accent-color:#22d3ee"></label>
+  <label style="display:block;font-size:.7rem"><span style="text-transform:uppercase;letter-spacing:.05em">星云</span><select id="s-theme" style="width:100%;padding:.25rem .4rem;border-radius:.4rem;font-size:.75rem"><option value="cyan">深空青蓝</option><option value="magenta">玫瑰星云</option><option value="gold">黄金星系</option><option value="nebula">多彩星云</option></select></label>
+</div>
+
+<div style="position:fixed;bottom:1.5rem;left:1.5rem;z-index:20;display:flex;gap:.5rem">
+  <button id="btn-set" style="padding:.35rem .8rem;border-radius:.4rem;font-size:.75rem;border:1px solid;cursor:pointer;font-family:inherit">⚙ 星图</button>
+  <span style="padding:.35rem .8rem;border-radius:.4rem;font-size:.75rem;border:1px solid">{nodes.length} 恒星 · {links.length} 链路</span>
+</div>
+
+<div id="graph-data" style="display:none" data-json={gData}></div>
+
+<style>
+  html.light #uni-root { background: #f8fafc; }
+  html.dark #uni-root { background: #020617; }
+  html.light #pv-card { background: rgba(255,255,255,.85); border-color: #e5e7eb; }
+  html.dark #pv-card { background: rgba(11,20,37,.88); border-color: rgba(34,211,238,.18); }
+  html.light #pv-t { color: #1a1d23; } html.dark #pv-t { color: #e4e8f1; }
+  html.light #pv-d { color: #6b7280; } html.dark #pv-d { color: #94a3b8; }
+  html.light #pv-go { color: #0891b2; } html.dark #pv-go { color: #22d3ee; }
+  html.light #set-pn { background: rgba(255,255,255,.85); border-color: #e5e7eb; }
+  html.dark #set-pn { background: rgba(11,20,37,.88); border-color: rgba(34,211,238,.15); }
+  html.light #set-pn label span { color: #6b7280; } html.dark #set-pn label span { color: #94a3b8; }
+  html.light #set-pn select { background: #f9fafb; color: #374151; border-color: #d1d5db; }
+  html.dark #set-pn select { background: rgba(255,255,255,.05); color: #94a3b8; border-color: rgba(255,255,255,.1); }
+  html.light #btn-set, html.light #btn-set+span { background: rgba(255,255,255,.75); border-color: #e5e7eb; color: #6b7280; }
+  html.dark #btn-set, html.dark #btn-set+span { background: rgba(11,20,37,.75); border-color: rgba(255,255,255,.1); color: #94a3b8; }
+</style>
 
 <script>
-  (function() {
-    const canvas = document.getElementById('graph-canvas');
-    if (!canvas) return;
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const container = canvas.parentElement;
-    const label = document.getElementById('hover-label');
-
-    // Parse graph data from server
-    const rawData = document.getElementById('graph-data');
-    if (!rawData || !rawData.textContent) return;
-    const data = JSON.parse(rawData.textContent.trim());
-    const graphNodes = data.nodes;
-    const graphLinks = data.links;
-
-    // State
-    let nodePositions = [];
-    let hoveredIndex = -1;
-    let animationId = 0;
-    let time = 0;
-
-    function getColors() {
-      const isDark = document.documentElement.classList.contains('dark');
-      return {
-        bg: isDark ? '#0b1121' : '#fafbfc',
-        node: isDark ? '#06b6d4' : '#0891b2',
-        nodeHover: isDark ? '#22d3ee' : '#06b6d4',
-        edge: isDark ? 'rgba(6,182,212,0.2)' : 'rgba(8,145,178,0.12)',
-        edgeHover: isDark ? 'rgba(6,182,212,0.6)' : 'rgba(8,145,178,0.5)',
-        glow: isDark ? 'rgba(6,182,212,0.15)' : 'rgba(8,145,178,0.1)',
-        text: isDark ? '#a0a9ba' : '#8b909c',
-      };
+  (function start() {
+    const dEl = document.getElementById('graph-data');
+    if (!dEl || !dEl.dataset.json) {
+      console.warn('Graph data not found, retrying...');
+      setTimeout(start, 100);
+      return;
     }
+    const data = JSON.parse(dEl.dataset.json);
+    const gNodes = data.nodes, gLinks = data.links, cP = data.contentPreview || {};
 
-    let colors = getColors();
+    const sets = { bright:1, dense:8, spin:.3, theme:'cyan' };
+    const pals = {
+      cyan:{core:0x22d3ee,nebula:[0x0e2a4a,0x061a2e],fog:0x020617},
+      magenta:{core:0xf472b6,nebula:[0x2e0a2a,0x1a0620],fog:0x0d0210},
+      gold:{core:0xfbbf24,nebula:[0x2e1f0a,0x1a1206],fog:0x0a0802},
+      nebula:{core:0xa78bfa,nebula:[0x1a0a3e,0x0e1a3e],fog:0x050510},
+    };
+    let pal = pals[sets.theme];
 
-    function resize() {
-      var rect = container.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    }
+    // Create canvas
+    const root = document.getElementById('uni-root');
+    const cvs = document.createElement('canvas');
+    cvs.id = 'cvs';
+    cvs.style.display = 'block';
+    cvs.style.width = '100%';
+    cvs.style.height = '100%';
+    root.appendChild(cvs);
 
-    function initPositions() {
-      var w = canvas.width / window.devicePixelRatio;
-      var h = canvas.height / window.devicePixelRatio;
-      var cx = w / 2;
-      var cy = h / 2;
-      var r = Math.min(w, h) * 0.35;
+    const renderer = new THREE.WebGLRenderer({canvas:cvs,antialias:true,alpha:false});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1;
 
-      nodePositions = graphNodes.map(function(_n, i) {
-        var angle = (2 * Math.PI * i) / graphNodes.length - Math.PI / 2;
-        return {
-          x: cx + Math.cos(angle) * r * (0.7 + Math.random() * 0.6),
-          y: cy + Math.sin(angle) * r * (0.7 + Math.random() * 0.6),
-          vx: 0,
-          vy: 0,
-          radius: 18 + Math.random() * 8,
-        };
-      });
-    }
+    const scene = new THREE.Scene();
+    scene.fog=new THREE.FogExp2(pal.fog,6e-5);
+    scene.background=new THREE.Color(pal.fog);
+    const cam = new THREE.PerspectiveCamera(50,2,.5,200);
+    cam.position.set(0,4,24);
+    const ctrl = new OrbitControls(cam,renderer.domElement);
+    ctrl.enableDamping=true;ctrl.dampingFactor=.06;ctrl.minDistance=5;ctrl.maxDistance=70;
+    ctrl.maxPolarAngle=Math.PI*.85;ctrl.autoRotate=true;ctrl.autoRotateSpeed=sets.spin;
 
-    function draw() {
-      var w = canvas.width / window.devicePixelRatio;
-      var h = canvas.height / window.devicePixelRatio;
-      ctx.clearRect(0, 0, w, h);
+    scene.add(new THREE.AmbientLight(0x1a2a5a,.4));
+    const coreLt = new THREE.PointLight(pal.core,100,60,1.5); scene.add(coreLt);
 
-      var simStep = 0.3;
-      var centerX = w / 2;
-      var centerY = h / 2;
-      var repulsion = 800;
-      var springLen = 120;
-      var springK = 0.02;
-      var damping = 0.85;
+    // Background stars
+    const N=3000; const bgG=new THREE.BufferGeometry(); const bgV=new Float32Array(N*3),bgC2=new Float32Array(N*3);
+    for(let i=0;i<N;i++){const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),r2=35+Math.random()*55;bgV[i*3]=r2*Math.sin(ph)*Math.cos(th);bgV[i*3+1]=r2*Math.sin(ph)*Math.sin(th);bgV[i*3+2]=r2*Math.cos(ph);const c2=new THREE.Color().setHSL(.55+Math.random()*.35,.5,.4+Math.random()*.6);bgC2[i*3]=c2.r;bgC2[i*3+1]=c2.g;bgC2[i*3+2]=c2.b;}
+    bgG.setAttribute('position',new THREE.BufferAttribute(bgV,3));bgG.setAttribute('color',new THREE.BufferAttribute(bgC2,3));
+    const bgS=new THREE.Points(bgG,new THREE.PointsMaterial({size:.06,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(bgS);
 
-      // Repulsion
-      for (var i = 0; i < nodePositions.length; i++) {
-        for (var j = i + 1; j < nodePositions.length; j++) {
-          var a = nodePositions[i];
-          var b = nodePositions[j];
-          var dx = b.x - a.x;
-          var dy = b.y - a.y;
-          var dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
-          var force = repulsion / (dist * dist);
-          var fx = (dx / dist) * force;
-          var fy = (dy / dist) * force;
-          a.vx -= fx * simStep;
-          a.vy -= fy * simStep;
-          b.vx += fx * simStep;
-          b.vy += fy * simStep;
-        }
-      }
+    // Core
+    const coreM=new THREE.Mesh(new THREE.SphereGeometry(.3,32,32),new THREE.MeshBasicMaterial({color:pal.core}));scene.add(coreM);
+    const coreG=new THREE.Mesh(new THREE.SphereGeometry(.7,32,32),new THREE.ShaderMaterial({uniforms:{uC:{value:new THREE.Color(pal.core)}},vertexShader:'varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'varying vec3 vN;uniform vec3 uC;void main(){float i=pow(.65-dot(vN,vec3(0,0,1)),3.5);gl_FragColor=vec4(uC,i*.5);}',transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(coreG);
 
-      // Springs
-      graphLinks.forEach(function(link) {
-        var si = -1, ti = -1;
-        for (var k = 0; k < graphNodes.length; k++) {
-          if (graphNodes[k].id === link.source) si = k;
-          if (graphNodes[k].id === link.target) ti = k;
-        }
-        if (si === -1 || ti === -1) return;
-        var a = nodePositions[si];
-        var b = nodePositions[ti];
-        var dx = b.x - a.x;
-        var dy = b.y - a.y;
-        var dist = Math.sqrt(dx * dx + dy * dy);
-        var displacement = dist - springLen;
-        var force = displacement * springK;
-        var fx = (dx / Math.max(dist, 1)) * force;
-        var fy = (dy / Math.max(dist, 1)) * force;
-        a.vx += fx * simStep;
-        a.vy += fy * simStep;
-        b.vx -= fx * simStep;
-        b.vy -= fy * simStep;
-      });
+    // Nebulae
+    const nebs=[];
+    for(let i=0;i<6;i++){const g=new THREE.PlaneGeometry(15+Math.random()*25,15+Math.random()*25);const m=new THREE.ShaderMaterial({uniforms:{uT:{value:0},uC1:{value:new THREE.Color(pal.nebula[0])},uC2:{value:new THREE.Color(pal.nebula[1])}},vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'varying vec2 vU;uniform float uT;uniform vec3 uC1,uC2;float n(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}void main(){float d=length(vU-.5)*2.;float a=smoothstep(1.,.15,d)*.06*(.5+.5*n(vU*8.+uT*.005));gl_FragColor=vec4(mix(uC1,uC2,n(vU*3.)),a);}',transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});const p=new THREE.Mesh(g,m);p.position.set((Math.random()-.5)*25,(Math.random()-.5)*25,(Math.random()-.5)*25);p.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);scene.add(p);nebs.push(p);}
 
-      // Center gravity + damp
-      nodePositions.forEach(function(p) {
-        p.vx += (centerX - p.x) * 0.001;
-        p.vy += (centerY - p.y) * 0.001;
-        p.vx *= damping;
-        p.vy *= damping;
-        p.x += p.vx;
-        p.y += p.vy;
-        p.x = Math.max(p.radius, Math.min(w - p.radius, p.x));
-        p.y = Math.max(p.radius, Math.min(h - p.radius, p.y));
-      });
+    // Glow texture
+    function gTex(hex){const c=document.createElement('canvas');c.width=128;c.height=128;const x=c.getContext('2d');const g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'white');g.addColorStop(.06,hex);g.addColorStop(.25,hex);g.addColorStop(.6,'transparent');x.fillStyle=g;x.fillRect(0,0,128,128);return new THREE.CanvasTexture(c);}
 
-      // Draw edges
-      graphLinks.forEach(function(link) {
-        var si = -1, ti = -1;
-        for (var k = 0; k < graphNodes.length; k++) {
-          if (graphNodes[k].id === link.source) si = k;
-          if (graphNodes[k].id === link.target) ti = k;
-        }
-        if (si === -1 || ti === -1) return;
-        var a = nodePositions[si];
-        var b = nodePositions[ti];
-        var isHovered = hoveredIndex === si || hoveredIndex === ti;
+    // Article dots
+    const dotG=new THREE.Group();const dots=[];const p3=[];const dCols=[0x22d3ee,0xf472b6,0x34d399,0xfbbf24,0xa78bfa,0xfb923c,0x60a5fa,0xf87171];
+    gNodes.forEach((n,i)=>{const col=dCols[i%dCols.length];const hex='#'+new THREE.Color(col).getHexString();const s=new THREE.Sprite(new THREE.SpriteMaterial({map:gTex(hex),color:col,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true,transparent:true,opacity:.85}));const b=.25+Math.random()*.2;s.userData={node:n,index:i,base:b};s.scale.setScalar(b);const phi=Math.acos(1-2*(i+.5)/gNodes.length),theta=Math.PI*(1+Math.sqrt(5))*i,r=sets.dense;s.position.set(r*Math.sin(phi)*Math.cos(theta),r*Math.sin(phi)*Math.sin(theta),r*Math.cos(phi));p3.push(s.position.clone());dotG.add(s);dots.push(s);});scene.add(dotG);
 
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = isHovered ? colors.edgeHover : colors.edge;
-        ctx.lineWidth = isHovered ? 2 : 0.8;
-        if (isHovered) {
-          ctx.shadowColor = colors.glow;
-          ctx.shadowBlur = 10;
-        }
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-      });
+    // Links
+    const lnkG=new THREE.Group();const lnks=[];
+    gLinks.forEach(l=>{const si=gNodes.findIndex(n=>n.id===l.source),ti=gNodes.findIndex(n=>n.id===l.target);if(si===-1||ti===-1)return;const mid=new THREE.Vector3((p3[si].x+p3[ti].x)/2,(p3[si].y+p3[ti].y)/2,(p3[si].z+p3[ti].z)/2);const cv=new THREE.QuadraticBezierCurve3(p3[si].clone(),mid,p3[ti].clone());const ln=new THREE.Line(new THREE.BufferGeometry().setFromPoints(cv.getPoints(30)),new THREE.LineBasicMaterial({color:0x1a3050,transparent:true,opacity:.2,blending:THREE.AdditiveBlending,depthWrite:false}));ln.userData={si,ti};lnkG.add(ln);lnks.push(ln);});scene.add(lnkG);
 
-      // Draw nodes
-      nodePositions.forEach(function(p, i) {
-        var node = graphNodes[i];
-        var isHovered = hoveredIndex === i;
+    // Interaction
+    const rc=new THREE.Raycaster();const ms=new THREE.Vector2();let hov=null,sel=null;
+    const lbl=document.getElementById('star-lbl'),pvC=document.getElementById('pv-card');
+    function shPv(n){if(!n){pvC.style.opacity='0';pvC.style.transform='translateX(20px)';pvC.style.pointerEvents='none';lbl.style.opacity='0';return}const s2=n.url.split('/').filter(Boolean).pop()||'',pv=cP[s2],inc=gLinks.filter(l2=>l2.target===n.id).length,out=n.links?.length||0;document.getElementById('pv-t').textContent=n.title;document.getElementById('pv-d').textContent=pv?.desc||'深空中的一颗恒星...';document.getElementById('pv-g').innerHTML=(n.tags||[]).map(t2=>'<span style="padding:.15rem .5rem;border-radius:1rem;font-size:.7rem;background:rgba(255,255,255,.06);color:#94a3b8">#'+t2+'</span>').join('');document.getElementById('pv-o').innerHTML='⬆ '+out+' 出链';document.getElementById('pv-i').innerHTML='⬇ '+inc+' 入链';document.getElementById('pv-go').href=n.url;pvC.style.opacity='1';pvC.style.transform='translateX(0)';pvC.style.pointerEvents='auto';lbl.textContent='✦ '+n.title;lbl.style.opacity='1';}
 
-        if (isHovered) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius + 12, 0, Math.PI * 2);
-          ctx.fillStyle = colors.glow;
-          ctx.fill();
-        }
+    cvs.addEventListener('mousemove',e=>{ms.x=(e.clientX/window.innerWidth)*2-1;ms.y=-(e.clientY/window.innerHeight)*2+1;rc.setFromCamera(ms,cam);const h=rc.intersectObjects(dots,false);if(h.length>0){const o=h[0].object;if(hov!==o){if(hov&&hov!==sel)hov.scale.setScalar(hov.userData.base);hov=o;hov.scale.setScalar(hov.userData.base*3.5);shPv(hov.userData.node);document.body.style.cursor='pointer'}}else{if(hov&&hov!==sel)hov.scale.setScalar(hov.userData.base);hov=null;if(!sel)shPv(null);document.body.style.cursor='default'}});
+    cvs.addEventListener('click',e=>{if(hov?.userData?.node){if(sel&&sel!==hov)sel.scale.setScalar(sel.userData.base);sel=hov;sel.scale.setScalar(sel.userData.base*5);if(e.detail===2)window.location.href=sel.userData.node.url}else{if(sel){sel.scale.setScalar(sel.userData.base);sel=null;shPv(null)}}});
 
-        ctx.beginPath();
-        var pulse = 1 + Math.sin(time * 0.05 + i) * 0.06;
-        var r = p.radius * (isHovered ? 1.2 : pulse);
-        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = isHovered ? colors.nodeHover : colors.node;
-        ctx.shadowColor = colors.glow;
-        ctx.shadowBlur = isHovered ? 20 : 8;
-        ctx.fill();
-        ctx.shadowBlur = 0;
+    // Settings
+    document.getElementById('btn-set').addEventListener('click',()=>{const pn=document.getElementById('set-pn');pn.style.display=pn.style.display==='block'?'none':'block'});
+    document.getElementById('s-bright').addEventListener('input',function(){sets.bright=+this.value;renderer.toneMappingExposure=sets.bright});
+    document.getElementById('s-dense').addEventListener('input',function(){sets.dense=+this.value;dots.forEach((d,i)=>{const phi=Math.acos(1-2*(i+.5)/gNodes.length),theta=Math.PI*(1+Math.sqrt(5))*i,r=sets.dense;d.position.set(r*Math.sin(phi)*Math.cos(theta),r*Math.sin(phi)*Math.sin(theta),r*Math.cos(phi))})});
+    document.getElementById('s-spin').addEventListener('input',function(){sets.spin=+this.value;ctrl.autoRotateSpeed=sets.spin});
+    document.getElementById('s-theme').addEventListener('change',function(){sets.theme=this.value;pal=pals[sets.theme];scene.fog=new THREE.FogExp2(pal.fog,6e-5);scene.background=new THREE.Color(pal.fog);coreLt.color.set(pal.core);coreM.material.color.set(pal.core);coreG.material.uniforms.uC.value.set(pal.core);nebs.forEach(n2=>{n2.material.uniforms.uC1.value.set(pal.nebula[0]);n2.material.uniforms.uC2.value.set(pal.nebula[1])})});
 
-        ctx.fillStyle = colors.text;
-        ctx.font = (isHovered ? 'bold ' : '') + '11px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(node.title || node.id, p.x, p.y + p.radius + 16);
-      });
+    function rs(){renderer.setSize(window.innerWidth,window.innerHeight);cam.aspect=window.innerWidth/Math.max(window.innerHeight,1);cam.updateProjectionMatrix()}
+    window.addEventListener('resize',rs);rs();
 
-      time++;
-    }
-
-    function animate() {
-      draw();
-      animationId = requestAnimationFrame(animate);
-    }
-
-    canvas.addEventListener('mousemove', function(e) {
-      var rect = canvas.getBoundingClientRect();
-      var mx = e.clientX - rect.left;
-      var my = e.clientY - rect.top;
-      var found = -1;
-
-      for (var i = nodePositions.length - 1; i >= 0; i--) {
-        var p = nodePositions[i];
-        var dx = mx - p.x;
-        var dy = my - p.y;
-        if (dx * dx + dy * dy < (p.radius + 6) * (p.radius + 6)) {
-          found = i;
-          break;
-        }
-      }
-
-      hoveredIndex = found;
-      if (label) {
-        if (found >= 0) {
-          var n = graphNodes[found];
-          var inCount = 0;
-          graphLinks.forEach(function(l) { if (l.target === n.id) inCount++; });
-          var outCount = n.links ? n.links.length : 0;
-          label.textContent = n.title + ' [' + outCount + '↑ ' + inCount + '↓]';
-          label.className = 'neon-cyan';
-        } else {
-          label.textContent = '';
-          label.className = '';
-        }
-      }
-    });
-
-    canvas.addEventListener('click', function() {
-      if (hoveredIndex >= 0 && graphNodes[hoveredIndex]) {
-        window.location.href = graphNodes[hoveredIndex].url;
-      }
-    });
-
-    resize();
-    initPositions();
-    animate();
-
-    window.addEventListener('resize', function() {
-      resize();
-      initPositions();
-    });
-
-    var observer = new MutationObserver(function() {
-      colors = getColors();
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    const clk=new THREE.Clock();
+    (function anim(){requestAnimationFrame(anim);const dt=clk.getDelta(),t=performance.now()*.001;ctrl.update();coreM.scale.setScalar(1+Math.sin(t*2.5)*.15);coreLt.intensity=100+Math.sin(t*2.5)*20;bgS.rotation.y+=dt*.015;bgS.rotation.x+=dt*.004;nebs.forEach((n,i)=>{n.material.uniforms.uT.value=t;n.rotation.z+=dt*(.02+i*.008);n.rotation.x+=dt*(.01+i*.006)});dots.forEach((d,i)=>{if(d!==hov&&d!==sel)d.scale.setScalar(d.userData.base*(1+Math.sin(t*3+i*.7)*.15))});lnks.forEach(l=>{const rel=hov&&(l.userData.si===hov.userData.index||l.userData.ti===hov.userData.index);l.material.opacity+=(rel?.6:.2-l.material.opacity)*.08;if(rel)l.material.color.set(0x44aaff)});renderer.render(scene,cam)})();
   })();
 </script>

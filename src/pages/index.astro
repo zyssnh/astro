@@ -6,6 +6,7 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout pageTitle="首页">
+  <div class="max-w-3xl mx-auto px-6 py-12 sm:py-16">
   <!-- Hero -->
   <section class="relative overflow-hidden rounded-2xl mb-16 py-16 sm:py-24 px-6 text-center
     light:bg-white light:border light:border-gray-200
@@ -42,12 +43,12 @@ const base = import.meta.env.BASE_URL;
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
           阅读文章
         </a>
-        <a href={`${base}/tags/`}
+        <a href={`${base}/graph/`}
           class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200
             light:bg-gray-100 light:text-gray-700 light:hover:bg-gray-200
             dark:bg-white/8 dark:text-[#a0a9ba] dark:hover:bg-white/15">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-          按标签浏览
+          探索双链
         </a>
       </div>
     </div>
@@ -67,39 +68,29 @@ const base = import.meta.env.BASE_URL;
   <!-- Quick nav cards -->
   <section class="mb-16">
     <h2 class="text-xl sm:text-2xl font-bold mb-6 px-1 light:text-[#1a1d23] dark:text-[#e4e8f1]">站点导览</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger-children">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-children">
       <a href={`${base}/blog/`} class="card-surface group flex items-start gap-4 p-5 no-underline">
         <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0
           light:bg-blue-50 light:text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
         </div>
         <div>
-          <h3 class="font-semibold text-sm mb-1 light:text-[#1a1d23] dark:text-[#e4e8f1]">博客</h3>
-          <p class="text-xs light:text-[#8b909c] dark:text-[#6b7394]">Markdown 文章，数学公式与代码高亮</p>
+          <h3 class="font-semibold text-sm mb-1 light:text-[#1a1d23] dark:text-[#e4e8f1]">文档</h3>
+          <p class="text-xs light:text-[#8b909c] dark:text-[#6b7394]">文章、笔记与归档，按项目分类</p>
         </div>
       </a>
 
-      <a href={`${base}/collect/`} class="card-surface group flex items-start gap-4 p-5 no-underline">
-        <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0
-          light:bg-amber-50 light:text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        </div>
-        <div>
-          <h3 class="font-semibold text-sm mb-1 light:text-[#1a1d23] dark:text-[#e4e8f1]">收藏</h3>
-          <p class="text-xs light:text-[#8b909c] dark:text-[#6b7394]">收集资源、工具与链接</p>
-        </div>
-      </a>
-
-      <a href={`${base}/tags/`} class="card-surface group flex items-start gap-4 p-5 no-underline">
+      <a href={`${base}/graph/`} class="card-surface group flex items-start gap-4 p-5 no-underline">
         <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0
           light:bg-emerald-50 light:text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
         </div>
         <div>
-          <h3 class="font-semibold text-sm mb-1 light:text-[#1a1d23] dark:text-[#e4e8f1]">标签</h3>
-          <p class="text-xs light:text-[#8b909c] dark:text-[#6b7394]">按主题分类浏览文章</p>
+          <h3 class="font-semibold text-sm mb-1 light:text-[#1a1d23] dark:text-[#e4e8f1]">双链</h3>
+          <p class="text-xs light:text-[#8b909c] dark:text-[#6b7394]">3D 宇宙中探索文章间的联系</p>
         </div>
       </a>
     </div>
   </section>
+  </div>
 </BaseLayout>

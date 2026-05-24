@@ -21,17 +21,14 @@ const base = import.meta.env.BASE_URL;
 
     <nav
         id="menu-panel"
-        class="hidden absolute left-0 mt-3 w-52 rounded-xl shadow-xl border z-50
+        class="hidden absolute left-0 mt-3 w-44 rounded-xl shadow-xl border z-50
           light:bg-white light:border-gray-200
           dark:bg-[#131b33] dark:border-[#1e2d50]"
     >
         <ul class="flex flex-col p-2 gap-0.5 text-sm">
             <li><a href={`${base}/`} class="menu-link">首页</a></li>
-            <li><a href={`${base}/blog/`} class="menu-link">博客</a></li>
-            <li><a href={`${base}/archive/`} class="menu-link">归档</a></li>
-            <li><a href={`${base}/collect/`} class="menu-link">收藏</a></li>
-            <li><a href={`${base}/tags/`} class="menu-link">标签</a></li>
-            <li><a href={`${base}/graph/`} class="menu-link neon-cyan">双链</a></li>
+            <li><a href={`${base}/blog/`} class="menu-link">文档</a></li>
+            <li><a href={`${base}/graph/`} class="menu-link">双链</a></li>
         </ul>
     </nav>
 </div>

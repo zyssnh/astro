@@ -2,29 +2,25 @@
 const base = import.meta.env.BASE_URL;
 ---
 
-<footer class="border-t mt-16 py-8
-    light:border-gray-200 light:text-gray-500
-    dark:border-[#1e2d50] dark:text-[#6b7394]">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p class="text-sm">
-            &copy; {new Date().getFullYear()} zyssnh <span class="mx-1">·</span> Built with Astro
+<footer class="border-t py-8
+    light:border-gray-100 light:text-gray-400
+    dark:border-[#1e2d50]/40 dark:text-[#475569]">
+    <div class="max-w-3xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-xs">
+            &copy; {new Date().getFullYear()} zyssnh <span class="mx-1.5 opacity-30">·</span> Built with Astro
         </p>
-
-        <nav class="flex gap-5 text-sm">
+        <nav class="flex gap-5 text-xs">
             <a href={`${base}/`} class="footer-link">首页</a>
-            <a href={`${base}/blog/`} class="footer-link">博客</a>
-            <a href={`${base}/archive/`} class="footer-link">归档</a>
-            <a href={`${base}/collect/`} class="footer-link">收藏</a>
-            <a href={`${base}/tags/`} class="footer-link">标签</a>
-            <a href={`${base}/graph/`} class="footer-link neon-cyan">双链</a>
+            <a href={`${base}/blog/`} class="footer-link">文档</a>
+            <a href={`${base}/graph/`} class="footer-link">双链</a>
         </nav>
     </div>
 </footer>
 
 <style>
-  .footer-link { transition: color 0.2s ease; }
-  html.light .footer-link { color: #6b7280; }
-  html.light .footer-link:hover { color: #2563eb; }
-  html.dark .footer-link { color: #6b7394; }
-  html.dark .footer-link:hover { color: #60a5fa; }
+  .footer-link { text-decoration: none; transition: color 0.2s; }
+  html.light .footer-link { color: #9ca3af; }
+  html.light .footer-link:hover { color: #4b5563; }
+  html.dark .footer-link { color: #475569; }
+  html.dark .footer-link:hover { color: #94a3b8; }
 </style>

@@ -4,6 +4,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkToc from 'remark-toc';
 import remarkGfm from 'remark-gfm';
+import remarkWikilink from './src/plugins/remark-wikilink.mjs';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 
@@ -29,7 +30,7 @@ export default defineConfig({
         plugins: [tailwindcss()],
     },
     markdown: {
-        remarkPlugins: [remarkMath, remarkToc, remarkGfm],
+        remarkPlugins: [remarkMath, remarkToc, remarkWikilink, remarkGfm],
         rehypePlugins: [rehypeKatex, rehypeSlug, [
             rehypeAutolinkHeadings, {
                 behavior: 'wrap',

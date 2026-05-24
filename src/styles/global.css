@@ -168,6 +168,23 @@ a {
   transition: color var(--transition-fast);
 }
 
+/* ---- Wikilinks ---- */
+.prose a[href^="/posts/"] {
+  color: var(--color-accent);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--color-accent);
+  transition: all 0.2s ease;
+}
+.prose a[href^="/posts/"]:hover {
+  color: var(--color-accent-hover);
+  border-bottom-style: solid;
+}
+.wikilink.broken {
+  color: #ef4444;
+  border-bottom: 1px dashed #ef4444;
+  cursor: help;
+}
+
 /* ---- Focus ring ---- */
 :focus-visible {
   outline: 2px solid var(--color-accent);

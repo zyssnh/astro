@@ -1,109 +1,148 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import BlogPost from "../components/BlogPost.astro";
+
+const base = import.meta.env.BASE_URL;
 
 const allPosts = Object.values(
-    import.meta.glob("./posts/*.md", { eager: true }),
-).sort((a: any, b: any) => {
-    const dateA = new Date(a.frontmatter.pubDate).getTime();
-    const dateB = new Date(b.frontmatter.pubDate).getTime();
-    return dateB - dateA;
+    import.meta.glob("./posts/**/*.md", { eager: true }),
+);
+
+// Group posts by their parent folder
+const folderMap: Record<string, { count: number; posts: any[] }> = {
+    math: { count: 0, posts: [] },
+    cs: { count: 0, posts: [] },
+    ml: { count: 0, posts: [] },
+    llm: { count: 0, posts: [] },
+    other: { count: 0, posts: [] },
+};
+
+const FOLDER_META: Record<string, { name: string; icon: string; desc: string }> = {
+    math:  { name: "数学", icon: "📐", desc: "线性代数、微积分、概率论 —— 机器学习的数学基石" },
+    cs:    { name: "计算机", icon: "💻", desc: "算法设计与数据结构 —— 程序的骨架与灵魂" },
+    ml:    { name: "机器学习", icon: "🤖", desc: "从梯度下降到监督学习 —— 让数据说话" },
+    llm:   { name: "语言模型", icon: "🧠", desc: "Transformer 架构与注意力机制解析" },
+    other: { name: "其他", icon: "📄", desc: "未分类的文章" },
+};
+
+(allPosts as any[]).forEach((post: any) => {
+    const url: string = post.url || '';
+    const parts = url.split('/').filter(Boolean);
+    // URL: /posts/folder/slug/ → folder is the segment after 'posts'
+    const postsIdx = parts.indexOf('posts');
+    const folder = postsIdx >= 0 && parts.length > postsIdx + 1 ? parts[postsIdx + 1] : null;
+    // Only count if it's a real subfolder
+    if (folder && FOLDER_META[folder]) {
+        folderMap[folder].count++;
+        folderMap[folder].posts.push(post);
+    } else if (folder && folder !== 'posts') {
+        // Unknown folder
+        if (!folderMap[folder]) folderMap[folder] = { count: 0, posts: [] };
+        folderMap[folder].count++;
+        folderMap[folder].posts.push(post);
+    } else {
+        folderMap.other.count++;
+        folderMap.other.posts.push(post);
+    }
 });
 
-const allTags = [...new Set(allPosts.flatMap((p: any) => p.frontmatter.tags || []))] as string[];
+const folders = Object.entries(folderMap).filter(([_, v]) => v.count > 0);
+const totalPosts = folders.reduce((s, [_, v]) => s + v.count, 0);
+
+// Build year archive
+const byYear: Record<string, any[]> = {};
+(allPosts as any[]).forEach((post: any) => {
+    const year = new Date(post.frontmatter.pubDate).getFullYear().toString();
+    if (!byYear[year]) byYear[year] = [];
+    byYear[year].push(post);
+});
+const yearEntries = Object.entries(byYear).sort((a, b) => Number(b[0]) - Number(a[0]));
 ---
 
-<BaseLayout pageTitle="博客">
-    <div class="mb-8">
-        <h1 class="text-3xl font-extrabold mb-2 light:text-[#1a1d23] dark:text-[#e4e8f1]">文章</h1>
+<BaseLayout pageTitle="文档">
+    <div class="max-w-3xl mx-auto px-6 py-12 sm:py-16">
+    <div class="mb-10">
+        <h1 class="text-3xl font-extrabold mb-2 light:text-[#1a1d23] dark:text-[#e4e8f1]">文档</h1>
         <p class="text-sm light:text-[#8b909c] dark:text-[#6b7394]">
-            共 {allPosts.length} 篇文章
+            {folders.length} 个项目 · {totalPosts} 篇文章
         </p>
     </div>
 
-    <!-- Tag filter chips -->
-    {allTags.length > 0 && (
-        <div class="flex flex-wrap gap-2 mb-8" id="tag-filters">
-            <button class="tag-chip is-active" data-tag="all">全部</button>
-            {allTags.map((tag: string) => (
-                <button class="tag-chip" data-tag={tag}>{tag}</button>
-            ))}
-        </div>
-    )}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 stagger-children">
+        {folders.map(([folder, data]) => {
+            const meta = FOLDER_META[folder] || { name: folder, icon: "📁", desc: "" };
+            return (
+                <a href={`${base}/blog/${folder}/`}
+                    class="card-surface group rounded-xl p-6 no-underline block
+                        light:hover:border-blue-300 light:hover:shadow-lg
+                        dark:hover:border-blue-700 dark:hover:shadow-lg/20
+                        transition-all duration-300 hover:-translate-y-1">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0
+                            light:bg-gray-100 dark:bg-white/5">
+                            {meta.icon}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h2 class="text-lg font-bold light:text-[#1a1d23] dark:text-[#e4e8f1]
+                                    group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    {meta.name}
+                                </h2>
+                                <span class="text-xs px-2 py-0.5 rounded-full font-medium
+                                    light:bg-blue-50 light:text-blue-600
+                                    dark:bg-blue-900/20 dark:text-blue-400">
+                                    {data.count}
+                                </span>
+                            </div>
+                            <p class="text-sm leading-relaxed light:text-[#8b909c] dark:text-[#6b7394]">
+                                {meta.desc}
+                            </p>
 
-    <!-- Post grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children" id="post-grid">
-        {allPosts.map((post: any) => (
-            <div class="post-card" data-tags={JSON.stringify(post.frontmatter.tags || [])}>
-                <BlogPost
-                    url={post.url}
-                    title={post.frontmatter.title}
-                    description={post.frontmatter.description}
-                    author={post.frontmatter.author}
-                    pubDate={post.frontmatter.pubDate}
-                    tags={post.frontmatter.tags}
-                />
+                            <!-- Recent articles preview -->
+                            <div class="mt-3 space-y-1">
+                                {data.posts.slice(0, 3).map((post: any) => (
+                                    <div class="flex items-center gap-2 text-xs
+                                        light:text-[#8b909c] dark:text-[#6b7394]">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                        </svg>
+                                        <span class="truncate">{post.frontmatter.title}</span>
+                                    </div>
+                                ))}
+                                {data.count > 3 && (
+                                    <div class="text-xs pl-6 light:text-[#8b909c] dark:text-[#6b7394] italic">
+                                        +{data.count - 3} 篇...
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            );
+        })}
+    </div>
+
+    <!-- Archive by year -->
+    <div class="mt-16 pt-12 border-t light:border-gray-200 dark:border-[#1e2d50]">
+        <h2 class="text-xl font-bold mb-6 light:text-[#1a1d23] dark:text-[#e4e8f1]">归档</h2>
+        {yearEntries.map(([year, posts]) => (
+            <div class="mb-6">
+                <h3 class="text-sm font-bold mb-2 flex items-center gap-2 light:text-[#5a5f6b] dark:text-[#94a3b8]">
+                    {year}
+                    <span class="text-xs font-normal px-1.5 py-0.5 rounded-full light:bg-gray-100 dark:bg-white/5">{posts.length}</span>
+                </h3>
+                <div class="space-y-1">
+                    {posts.map((post: any) => (
+                        <a href={post.url} class="flex items-baseline gap-4 py-1.5 px-2 -mx-2 rounded-lg group transition-colors light:hover:bg-gray-50 dark:hover:bg-white/5">
+                            <time class="text-xs font-mono shrink-0 w-12 light:text-[#8b909c] dark:text-[#64748b] group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                                {new Date(post.frontmatter.pubDate).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })}
+                            </time>
+                            <span class="text-sm truncate light:text-[#1a1d23] dark:text-[#e4e8f1] group-hover:text-blue-600 dark:group-hover:text-blue-400">{post.frontmatter.title}</span>
+                        </a>
+                    ))}
+                </div>
             </div>
         ))}
     </div>
+    </div>
 </BaseLayout>
-
-<style>
-  .tag-chip {
-    padding: 0.35rem 0.8rem;
-    border-radius: 0.5rem;
-    font-size: 0.8rem;
-    font-weight: 500;
-    border: 1px solid;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
-  }
-  html.light .tag-chip {
-    background: transparent;
-    color: #5a5f6b;
-    border-color: #d1d5db;
-  }
-  html.light .tag-chip:hover { border-color: #93c5fd; color: #2563eb; }
-  html.light .tag-chip.is-active {
-    background: #2563eb;
-    color: #fff;
-    border-color: #2563eb;
-  }
-  html.dark .tag-chip {
-    background: transparent;
-    color: #6b7394;
-    border-color: #1e2d50;
-  }
-  html.dark .tag-chip:hover { border-color: #3b82f6; color: #60a5fa; }
-  html.dark .tag-chip.is-active {
-    background: #3b82f6;
-    color: #fff;
-    border-color: #3b82f6;
-  }
-</style>
-
-<script>
-  (function() {
-    const chips = document.querySelectorAll('.tag-chip');
-    const cards = document.querySelectorAll('.post-card');
-
-    chips.forEach(function(chip) {
-      chip.addEventListener('click', function() {
-        const tag = this.dataset.tag;
-
-        chips.forEach(function(c) { c.classList.remove('is-active'); });
-        this.classList.add('is-active');
-
-        cards.forEach(function(card) {
-          if (tag === 'all') {
-            card.style.display = '';
-          } else {
-            const tags = JSON.parse(card.dataset.tags || '[]');
-            card.style.display = tags.indexOf(tag) !== -1 ? '' : 'none';
-          }
-        });
-      });
-    });
-  })();
-</script>

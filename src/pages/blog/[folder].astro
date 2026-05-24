@@ -1,0 +1,264 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const base = import.meta.env.BASE_URL;
+
+export async function getStaticPaths() {
+    const folders = ["math", "cs", "ml", "llm"];
+    return folders.map((folder) => ({ params: { folder } }));
+}
+
+const { folder } = Astro.params as { folder: string };
+
+const FOLDER_META: Record<string, { name: string; icon: string }> = {
+    math: { name: "数学", icon: "📐" },
+    cs:   { name: "计算机", icon: "💻" },
+    ml:   { name: "机器学习", icon: "🤖" },
+    llm:  { name: "语言模型", icon: "🧠" },
+};
+const meta = FOLDER_META[folder] || { name: folder, icon: "📁" };
+
+// Static glob, filter by folder
+const allRaw = import.meta.glob("../posts/**/*.md", {
+    eager: true,
+    query: "?raw",
+}) as Record<string, { default: string }>;
+
+interface PostMeta {
+    slug: string;
+    title: string;
+    description: string;
+    pubDate: string;
+    tags: string[];
+    links: string[];
+    rawBody: string;
+    url: string;
+}
+
+const posts: PostMeta[] = [];
+
+for (const [path, mod] of Object.entries(allRaw)) {
+    // Only process files in the current folder
+    const pathParts = path.split('/');
+    const fileFolder = pathParts[pathParts.length - 2];
+    if (fileFolder !== folder) continue;
+
+    try {
+        const raw = typeof mod === 'string' ? mod : (mod as any).default || '';
+        const parts = raw.split('---');
+        if (parts.length < 3) continue;
+
+        const fmRaw = parts[1].trim();
+        const body = parts.slice(2).join('---').trim();
+
+        const fm: Record<string, any> = {};
+        for (const line of fmRaw.split('\n')) {
+            const kv = line.match(/^(\w+):\s*(.*)/);
+            if (kv) {
+                const key = kv[1];
+                const val = kv[2].trim();
+                if (val.startsWith('[') && val.endsWith(']')) {
+                    fm[key] = val.slice(1, -1).split(',').map((s: string) =>
+                        s.trim().replace(/^["']|["']$/g, '')
+                    );
+                } else {
+                    fm[key] = val.replace(/^["']|["']$/g, '');
+                }
+            }
+        }
+
+        const filename = pathParts[pathParts.length - 1].replace(/\.md$/, '');
+        posts.push({
+            slug: filename,
+            title: fm.title || filename,
+            description: fm.description || '',
+            pubDate: fm.pubDate || '',
+            tags: fm.tags || [],
+            links: fm.links || [],
+            rawBody: body,
+            url: `/posts/${folder}/${filename}/`,
+        });
+    } catch (_) {}
+}
+
+posts.sort((a, b) => b.pubDate.localeCompare(a.pubDate));
+const postsData = JSON.stringify(posts);
+---
+
+<BaseLayout pageTitle={meta.name}>
+    <div class="flex flex-col lg:flex-row gap-0" style="min-height: calc(100vh - 160px);">
+        <aside class="lg:w-56 shrink-0 border-r light:border-gray-200 dark:border-[#1e2d50] pr-4 lg:pr-6 overflow-y-auto"
+            style="max-height: calc(100vh - 160px);">
+            <div class="sticky top-24 space-y-1">
+                <a href={`${base}/blog/`} class="inline-flex items-center gap-1 text-xs font-medium mb-4 px-2
+                    light:text-[#8b909c] light:hover:text-blue-600 dark:text-[#6b7394] dark:hover:text-blue-400 transition-colors">
+                    &larr; 文档
+                </a>
+                <h2 class="text-sm font-bold mb-3 px-2 flex items-center gap-2
+                    light:text-[#1a1d23] dark:text-[#e4e8f1]">
+                    <span>{meta.icon}</span> {meta.name}
+                    <span class="ml-auto text-xs font-normal opacity-50">{posts.length}</span>
+                </h2>
+
+                <nav id="article-tree" class="space-y-0.5">
+                    {posts.map((post) => (
+                        <button class="article-link w-full text-left px-3 py-2 rounded-md text-sm transition-all
+                            light:text-[#5a5f6b] light:hover:text-blue-600 light:hover:bg-blue-50/50
+                            dark:text-[#6b7394] dark:hover:text-blue-400 dark:hover:bg-white/5"
+                            data-slug={post.slug}>
+                            <div class="font-medium">{post.title}</div>
+                            {post.description && (
+                                <div class="text-xs mt-0.5 opacity-60 truncate">{post.description}</div>
+                            )}
+                        </button>
+                    ))}
+                </nav>
+            </div>
+        </aside>
+
+        <div class="flex-1 min-w-0 lg:px-8" id="content-area">
+            <div id="welcome-panel">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="text-3xl">{meta.icon}</span>
+                    <div>
+                        <h1 class="text-2xl font-extrabold light:text-[#1a1d23] dark:text-[#e4e8f1]">{meta.name}</h1>
+                        <p class="text-sm light:text-[#8b909c] dark:text-[#6b7394]">{posts.length} 篇文章</p>
+                    </div>
+                </div>
+                <p class="text-sm leading-relaxed light:text-[#8b909c] dark:text-[#6b7394]">
+                    选择左侧文章开始阅读，内容将在此处展示。
+                </p>
+            </div>
+
+            <div id="article-viewer" class="hidden">
+                <div class="flex gap-6">
+                    <div class="flex-1 min-w-0">
+                        <div id="article-content" class="prose light:prose-slate dark:prose-invert max-w-3xl"></div>
+                    </div>
+                    <aside class="hidden xl:block w-48 shrink-0">
+                        <div class="sticky top-24">
+                            <h3 class="text-xs font-semibold uppercase tracking-wider mb-2 light:text-[#8b909c] dark:text-[#6b7394]">目录</h3>
+                            <nav id="viewer-toc" class="space-y-0.5 text-xs"></nav>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="posts-data" style="display:none" data-json={postsData}></div>
+</BaseLayout>
+
+<style>
+  .article-link.active { font-weight: 600 !important; }
+  html.light .article-link.active { color: #2563eb !important; background: #eff6ff !important; }
+  html.dark .article-link.active { color: #60a5fa !important; background: rgba(59,130,246,0.12) !important; }
+  html.dark .article-link { color: #6b7394; }
+  html.light .article-link { color: #5a5f6b; }
+</style>
+
+<script>
+  (function() {
+    var dataEl = document.getElementById('posts-data');
+    if (!dataEl || !dataEl.dataset.json) return;
+    var posts = JSON.parse(dataEl.dataset.json);
+
+    var articleLinks = document.querySelectorAll('.article-link');
+    var welcomePanel = document.getElementById('welcome-panel');
+    var articleViewer = document.getElementById('article-viewer');
+    var articleContent = document.getElementById('article-content');
+    var viewerToc = document.getElementById('viewer-toc');
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderMarkdown(md) {
+      var html = md;
+      html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
+        return '<pre><code class="language-' + lang + '">' + escapeHtml(code.trim()) + '</code></pre>';
+      });
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+      html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+      html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+      html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+      html = html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(_, target, alias) {
+        return '<span class="wikilink">' + (alias || target) + '</span>';
+      });
+      html = html.replace(/^---$/gm, '<hr>');
+      html = html.replace(/^> (.+)$/gm, '<blockquote><p>$1</p></blockquote>');
+      html = html.replace(/^\|(.+)\|$/gm, function(row) {
+        var cells = row.split('|').filter(function(c) { return c.trim(); });
+        if (/^[\s:-]+$/.test(cells[0] || '')) return '';
+        return '<tr>' + cells.map(function(c) { return '<td>' + c.trim() + '</td>'; }).join('') + '</tr>';
+      });
+      html = html.replace(/^(\s*)[-*]\s(.+)$/gm, '<li>$2</li>');
+      html = html.replace(/^(\s*)\d+\.\s(.+)$/gm, '<li>$2</li>');
+      html = html.replace(/\n\n+/g, '</p><p>');
+      html = '<p>' + html + '</p>';
+      html = html.replace(/<p>\s*<\/p>/g, '');
+      html = html.replace(/<p><(h[1-6]|pre|blockquote|ul|ol|li|table|tr)/g, '<$1');
+      html = html.replace(/<\/(h[1-6]|pre|blockquote|ul|ol|li|table|tr)><\/p>/g, '</$1>');
+      html = html.replace(/(<li>[\s\S]*?<\/li>)/g, function(match) {
+        return match.indexOf('<ul>') === -1 ? '<ul>' + match + '</ul>' : match;
+      });
+      html = html.replace(/(<tr>[\s\S]*?<\/tr>)/g, function(match) {
+        return match.indexOf('<table>') === -1 ? '<table>' + match + '</table>' : match;
+      });
+      return html;
+    }
+
+    function generateTOC(html) {
+      var headings = [];
+      var regex = /<h([23])[^>]*>(.*?)<\/h[23]>/g;
+      var match;
+      while ((match = regex.exec(html)) !== null) {
+        headings.push({ level: parseInt(match[1]), text: match[2].replace(/<[^>]*>/g, '').trim() });
+      }
+      return headings;
+    }
+
+    function showArticle(post) {
+      welcomePanel.classList.add('hidden');
+      articleViewer.classList.remove('hidden');
+
+      var html = renderMarkdown(post.rawBody);
+      articleContent.innerHTML = '<h1 class="text-2xl font-extrabold mb-1">' + post.title + '</h1>'
+        + (post.description ? '<p class="text-sm mb-4 light:text-[#8b909c] dark:text-[#6b7394]">' + post.description + '</p>' : '')
+        + '<div class="flex flex-wrap gap-1 mb-6">'
+        + post.tags.map(function(t) { return '<span class="px-1.5 py-0.5 rounded text-xs light:bg-blue-50 light:text-blue-600 dark:bg-blue-900/20 dark:text-blue-300">#' + t + '</span>'; }).join('')
+        + '</div>'
+        + html
+        + '<div class="mt-8 pt-4 border-t light:border-gray-200 dark:border-[#1e2d50]">'
+        + '<a href="' + post.url + '" class="text-sm font-medium light:text-blue-600 dark:text-blue-400">在新页面打开完整文章 &rarr;</a>'
+        + '</div>';
+
+      var headings = generateTOC(html);
+      if (viewerToc && headings.length > 0) {
+        viewerToc.innerHTML = headings.map(function(h) {
+          return '<a href="#" class="block py-0.5 light:text-[#8b909c] light:hover:text-blue-600 dark:text-[#6b7394] dark:hover:text-blue-400" style="padding-left:' + ((h.level - 2) * 0.75) + 'rem">' + h.text + '</a>';
+        }).join('');
+        viewerToc.parentElement.style.display = '';
+      } else if (viewerToc) {
+        viewerToc.parentElement.style.display = 'none';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    articleLinks.forEach(function(link) {
+      link.addEventListener('click', function() {
+        var slug = this.dataset.slug;
+        var post = posts.find(function(p) { return p.slug === slug; });
+        if (post) showArticle(post);
+        articleLinks.forEach(function(l) { l.classList.remove('active'); });
+        this.classList.add('active');
+      });
+    });
+  })();
+</script>
