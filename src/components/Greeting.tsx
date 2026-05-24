@@ -5,17 +5,17 @@ export default function Greeting({ messages }: { messages: string[] }) {
   const [greeting, setGreeting] = useState(messages[0]);
 
   return (
-    <div class="space-y-4">
-      <h3 class="text-xl sm:text-2xl font-semibold light:text-slate-800 dark:text-amber-50">
-        {greeting}！感谢来访！
-      </h3>
+    <div class="space-y-3">
+      <p class="text-lg font-medium light:text-[#5a5f6b] dark:text-[#a0a9ba]">
+        {greeting}
+      </p>
       <button
         onClick={() => setGreeting(randomMessage())}
-        class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer
-          light:bg-indigo-50 light:text-indigo-600 light:hover:bg-indigo-100 light:border light:border-indigo-200
-          dark:bg-white/10 dark:text-amber-200 dark:hover:bg-white/20 dark:border dark:border-amber-50/30"
+        class="px-4 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border
+          light:bg-white light:text-[#5a5f6b] light:border-gray-200 light:hover:border-blue-300 light:hover:text-blue-600
+          dark:bg-white/5 dark:text-[#6b7394] dark:border-[#1e2d50] dark:hover:border-blue-700 dark:hover:text-blue-400"
       >
-        换一句欢迎语
+        换一句
       </button>
     </div>
   );

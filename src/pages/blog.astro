@@ -9,91 +9,101 @@ const allPosts = Object.values(
     const dateB = new Date(b.frontmatter.pubDate).getTime();
     return dateB - dateA;
 });
+
+const allTags = [...new Set(allPosts.flatMap((p: any) => p.frontmatter.tags || []))] as string[];
 ---
 
 <BaseLayout pageTitle="博客">
-    <div class="blog-header">
-        <h1>我的 Astro 学习博客</h1>
-        <p>在这里，我将分享我的 Astro 学习之旅。</p>
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold mb-2 light:text-[#1a1d23] dark:text-[#e4e8f1]">文章</h1>
+        <p class="text-sm light:text-[#8b909c] dark:text-[#6b7394]">
+            共 {allPosts.length} 篇文章
+        </p>
     </div>
-    
-    <div class="blog-grid">
-        {
-            allPosts.map((post: any) => (
-                <BlogPost 
-                    url={post.url} 
+
+    <!-- Tag filter chips -->
+    {allTags.length > 0 && (
+        <div class="flex flex-wrap gap-2 mb-8" id="tag-filters">
+            <button class="tag-chip is-active" data-tag="all">全部</button>
+            {allTags.map((tag: string) => (
+                <button class="tag-chip" data-tag={tag}>{tag}</button>
+            ))}
+        </div>
+    )}
+
+    <!-- Post grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children" id="post-grid">
+        {allPosts.map((post: any) => (
+            <div class="post-card" data-tags={JSON.stringify(post.frontmatter.tags || [])}>
+                <BlogPost
+                    url={post.url}
                     title={post.frontmatter.title}
                     description={post.frontmatter.description}
                     author={post.frontmatter.author}
                     pubDate={post.frontmatter.pubDate}
-                    image={post.frontmatter.image}
                     tags={post.frontmatter.tags}
                 />
-            ))
-        }
+            </div>
+        ))}
     </div>
 </BaseLayout>
 
 <style>
-    .blog-header {
-        margin-bottom: 3rem;
-        padding-bottom: 2rem;
-        border-bottom: 2px solid;
-    }
-
-    :global(html.light) .blog-header {
-        border-color: #e5e7eb;
-    }
-
-    :global(html.dark) .blog-header {
-        border-color: #a855f7;
-    }
-
-    .blog-header h1 {
-        margin: 0 0 0.5rem 0;
-        font-size: 2.5rem;
-        font-weight: 700;
-    }
-
-    :global(html.light) .blog-header h1 {
-        color: #1f2937;
-    }
-
-    :global(html.dark) .blog-header h1 {
-        color: #fef3c7;
-    }
-
-    .blog-header p {
-        margin: 0;
-        font-size: 1.125rem;
-    }
-
-    :global(html.light) .blog-header p {
-        color: #6b7280;
-    }
-
-    :global(html.dark) .blog-header p {
-        color: #d1d5db;
-    }
-
-    .blog-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 2rem;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    @media (max-width: 768px) {
-        .blog-grid {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-
-        .blog-header h1 {
-            font-size: 2rem;
-        }
-    }
+  .tag-chip {
+    padding: 0.35rem 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+  html.light .tag-chip {
+    background: transparent;
+    color: #5a5f6b;
+    border-color: #d1d5db;
+  }
+  html.light .tag-chip:hover { border-color: #93c5fd; color: #2563eb; }
+  html.light .tag-chip.is-active {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+  }
+  html.dark .tag-chip {
+    background: transparent;
+    color: #6b7394;
+    border-color: #1e2d50;
+  }
+  html.dark .tag-chip:hover { border-color: #3b82f6; color: #60a5fa; }
+  html.dark .tag-chip.is-active {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+  }
 </style>
 
+<script>
+  (function() {
+    const chips = document.querySelectorAll('.tag-chip');
+    const cards = document.querySelectorAll('.post-card');
+
+    chips.forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        const tag = this.dataset.tag;
+
+        chips.forEach(function(c) { c.classList.remove('is-active'); });
+        this.classList.add('is-active');
+
+        cards.forEach(function(card) {
+          if (tag === 'all') {
+            card.style.display = '';
+          } else {
+            const tags = JSON.parse(card.dataset.tags || '[]');
+            card.style.display = tags.indexOf(tag) !== -1 ? '' : 'none';
+          }
+        });
+      });
+    });
+  })();
+</script>

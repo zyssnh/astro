@@ -3,48 +3,48 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <div class="relative">
-    <!-- 菜单按钮 -->
     <button
         id="menu-button"
         type="button"
-        class="inline-flex items-center justify-center rounded-md p-2
-           light:text-gray-800 light:hover:bg-gray-100
-           dark:text-amber-50 dark:hover:bg-white/10
-           focus:outline-none focus:ring-2 focus:ring-offset-2
-           focus:ring-blue-500"
+        class="inline-flex items-center justify-center rounded-lg p-2.5 transition-colors
+          light:text-gray-600 light:hover:bg-gray-100
+          dark:text-gray-300 dark:hover:bg-white/10
+          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         aria-expanded="false"
         aria-controls="menu-panel"
         aria-label="打开菜单"
     >
-        <!-- 汉堡图标 -->
-        <svg
-            class="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            stroke-width="2"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M4 6h16M4 12h16M4 18h16"></path>
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
     </button>
 
-    <!-- 菜单面板 -->
     <nav
         id="menu-panel"
-        class="hidden absolute left-0 mt-3 w-56 rounded-lg
-           light:bg-white light:shadow-lg light:border
-           dark:bg-slate-900 dark:border-slate-700"
+        class="hidden absolute left-0 mt-3 w-52 rounded-xl shadow-xl border z-50
+          light:bg-white light:border-gray-200
+          dark:bg-[#131b33] dark:border-[#1e2d50]"
     >
-        <ul class="flex flex-col p-4 gap-3 text-sm">
+        <ul class="flex flex-col p-2 gap-0.5 text-sm">
             <li><a href={`${base}/`} class="menu-link">首页</a></li>
-            <li><a href={`${base}/about/`} class="menu-link">关于</a></li>
             <li><a href={`${base}/blog/`} class="menu-link">博客</a></li>
             <li><a href={`${base}/collect/`} class="menu-link">收藏</a></li>
             <li><a href={`${base}/tags/`} class="menu-link">标签</a></li>
-            <li><a href={`${base}/test/`} class="menu-link">测试</a></li>
         </ul>
     </nav>
 </div>
+
+<style>
+  .menu-link {
+    display: block;
+    padding: 0.55rem 0.9rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+  html.light .menu-link { color: #4b5563; }
+  html.light .menu-link:hover { color: #2563eb; background-color: #eff6ff; }
+  html.dark .menu-link { color: #a0a9ba; }
+  html.dark .menu-link:hover { color: #60a5fa; background-color: rgba(59,130,246,0.1); }
+</style>
